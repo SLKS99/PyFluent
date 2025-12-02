@@ -5,16 +5,16 @@
 
 **PyFluent** is a Python library for controlling Tecan Fluent liquid handling robots. It provides a clean, Pythonic interface to control Tecan Fluent systems through the Tecan VisionX .NET API, with full PyLabRobot compatibility.
 
-## ✨ Features
+## Features
 
-- ✅ **Direct .NET API Integration** - Uses Tecan's native VisionX .NET API (Tecan.VisionX.API.V2), same as the C# SiLA2 server
-- ✅ **Full PyLabRobot Integration** - Works seamlessly with PyLabRobot's universal liquid handling interface
-- ✅ **Worklist Generation** - Convert PyLabRobot-style operations to Tecan GWL/CSV worklist files
-- ✅ **Multi-Channel Support** - Handle different volumes and wells per channel
-- ✅ **Comprehensive Documentation** - Full guides and API reference
-- ✅ **Production Ready** - Tested and working with real Tecan Fluent systems
+-  **Direct .NET API Integration** - Uses Tecan's native VisionX .NET API (Tecan.VisionX.API.V2)
+-  **Full PyLabRobot Integration** - Works seamlessly with PyLabRobot's universal liquid handling interface
+-  **Worklist Generation** - Convert PyLabRobot-style operations to Tecan GWL/CSV worklist files
+-  **Multi-Channel Support** - Handle different volumes and wells per channel
+-  **Comprehensive Documentation** - Full guides and API reference
+-  **Production Ready** - Tested and working with real Tecan Fluent systems
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Installation
 
@@ -134,13 +134,13 @@ wl = convert_operations_to_worklist(operations, name="MyProtocol")
 wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 ```
 
-## 📖 Documentation
+##  Documentation
 
 - **[Full Documentation](docs/README.md)** - Complete guide with examples
 - **[Worklists Guide](docs/worklists.md)** - Worklist generation and conversion
 - **[Architecture](docs/ARCHITECTURE.md)** - Internal architecture details
 
-## 🎯 Key Features
+##  Key Features
 
 ### Direct API Control
 
@@ -162,7 +162,7 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 - Convert PyLabRobot operations to worklists
 - Batch protocol execution
 
-## 📋 Requirements
+##  Requirements
 
 - **Windows** - Required for .NET API access
 - **Python 3.9+**
@@ -170,7 +170,7 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 - **pythonnet** - `pip install pythonnet`
 - **pylabrobot** - `pip install pylabrobot` (for PyLabRobot integration)
 
-## 📦 Installation
+##  Installation
 
 ### From Source
 
@@ -186,7 +186,7 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
-## 🧪 Examples
+##  Examples
 
 See the `examples/` directory for complete examples:
 
@@ -194,7 +194,7 @@ See the `examples/` directory for complete examples:
 - `simple_csv_runner.py` - Run protocols from CSV files
 - `pylabrobot_to_worklist.py` - Convert PyLabRobot operations to worklists
 
-## 🏗️ Architecture
+##  Architecture
 
 PyFluent connects Python to Tecan FluentControl using:
 
@@ -216,7 +216,7 @@ Robot Hardware
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed information.
 
-## 🧩 Components
+##  Components
 
 - **`FluentVisionX`** - Main backend class
 - **`Worklist`** - Generate Tecan GWL/CSV worklist files
@@ -225,7 +225,7 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed information.
 - **`MethodManager`** - Manage FluentControl methods
 - **`WorklistConverter`** - Convert PyLabRobot operations to worklists
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### "Could not find Tecan.VisionX.API.V2.dll"
 
@@ -245,22 +245,22 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed information.
 - Verify liquid class names match your FluentControl setup
 - Ensure labware names match exactly (case-sensitive)
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built on top of [PyLabRobot](https://github.com/pylabrobot/pylabrobot)
 - Uses Tecan's VisionX .NET API (Tecan.VisionX.API.V2) - same as the C# SiLA2 server
 
-## 📞 Support
+##  Support
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/SLKS99/PyFluent/issues)
 - **Documentation**: See `docs/` directory for detailed guides
