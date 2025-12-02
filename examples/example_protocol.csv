@@ -1,0 +1,7 @@
+command,param1,param2,param3,param4
+add_labware,Source[001],96 Well Flat,Nest61mm_Pos,3
+add_labware,Target[001],96 Well Flat,Nest61mm_Pos,2
+get_tips,FCA_200_UL,10,70
+aspirate,Source[001],100
+dispense,Target[001],100
+drop_tips,ThruDeckWaste_Pos_1

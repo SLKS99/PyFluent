@@ -1,0 +1,22 @@
+C;Worklist: TransferProtocol
+C;Created: 2025-12-01 14:42:28
+C;Operations: 18
+C;
+C;Transfer protocol - Source(14,3) to Dest(14,1)
+C;Source: Source[001], Dest: Target[001]
+A;Source[001];;;1;;100.0;Water Free Single;;255;
+D;Target[001];;;1;;100.0;Water Free Single;;255;
+A;Source[001];;;2;;100.0;Water Free Single;;255;
+D;Target[001];;;2;;100.0;Water Free Single;;255;
+A;Source[001];;;3;;100.0;Water Free Single;;255;
+D;Target[001];;;3;;100.0;Water Free Single;;255;
+A;Source[001];;;4;;100.0;Water Free Single;;255;
+D;Target[001];;;4;;100.0;Water Free Single;;255;
+A;Source[001];;;5;;50.0;Water Free Single;;255;
+D;Target[001];;;5;;50.0;Water Free Single;;255;
+A;Source[001];;;6;;50.0;Water Free Single;;255;
+D;Target[001];;;6;;50.0;Water Free Single;;255;
+A;Source[001];;;7;;50.0;Water Free Single;;255;
+D;Target[001];;;7;;50.0;Water Free Single;;255;
+A;Source[001];;;8;;50.0;Water Free Single;;255;
+D;Target[001];;;8;;50.0;Water Free Single;;255;

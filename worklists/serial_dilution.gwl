@@ -1,0 +1,20 @@
+C;Worklist: SerialDilution
+C;Created: 2025-11-26 16:00:17
+C;Operations: 16
+C;
+C;Serial dilution across row A
+B;
+A;DilutionPlate;;;1;;100.0;Water Free Single;;255;
+D;DilutionPlate;;;9;;100.0;Water Free Single;;255;
+B;
+A;DilutionPlate;;;9;;100.0;Water Free Single;;255;
+D;DilutionPlate;;;17;;100.0;Water Free Single;;255;
+B;
+A;DilutionPlate;;;17;;100.0;Water Free Single;;255;
+D;DilutionPlate;;;25;;100.0;Water Free Single;;255;
+B;
+A;DilutionPlate;;;25;;100.0;Water Free Single;;255;
+D;DilutionPlate;;;33;;100.0;Water Free Single;;255;
+B;
+A;DilutionPlate;;;33;;100.0;Water Free Single;;255;
+D;DilutionPlate;;;41;;100.0;Water Free Single;;255;

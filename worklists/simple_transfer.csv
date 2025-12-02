@@ -1,0 +1,14 @@
+Command,RackLabel,Position,Volume,LiquidClass,Comment
+C,,1,0.0,,Transfer samples from Source to Destination
+A,SourcePlate,1,100.0,Water Free Single,
+D,DestPlate,1,100.0,Water Free Single,
+B,,1,0.0,,
+A,SourcePlate,9,100.0,Water Free Single,
+D,DestPlate,9,100.0,Water Free Single,
+B,,1,0.0,,
+A,SourcePlate,17,100.0,Water Free Single,
+D,DestPlate,17,100.0,Water Free Single,
+B,,1,0.0,,
+A,SourcePlate,25,100.0,Water Free Single,
+D,DestPlate,25,100.0,Water Free Single,
+B,,1,0.0,,

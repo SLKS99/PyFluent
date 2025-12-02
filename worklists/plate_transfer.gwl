@@ -1,0 +1,29 @@
+C;Worklist: Transfer_SourcePlate_to_DestPlate
+C;Created: 2025-11-26 16:00:17
+C;Operations: 25
+C;
+C;Transfer from SourcePlate to DestPlate
+A;SourcePlate;;;1;;50.0;Water Free Single;;255;
+D;DestPlate;;;1;;50.0;Water Free Single;;255;
+A;SourcePlate;;;2;;50.0;Water Free Single;;255;
+D;DestPlate;;;2;;50.0;Water Free Single;;255;
+A;SourcePlate;;;3;;50.0;Water Free Single;;255;
+D;DestPlate;;;3;;50.0;Water Free Single;;255;
+A;SourcePlate;;;4;;50.0;Water Free Single;;255;
+D;DestPlate;;;4;;50.0;Water Free Single;;255;
+A;SourcePlate;;;5;;50.0;Water Free Single;;255;
+D;DestPlate;;;5;;50.0;Water Free Single;;255;
+A;SourcePlate;;;6;;50.0;Water Free Single;;255;
+D;DestPlate;;;6;;50.0;Water Free Single;;255;
+A;SourcePlate;;;7;;50.0;Water Free Single;;255;
+D;DestPlate;;;7;;50.0;Water Free Single;;255;
+A;SourcePlate;;;8;;50.0;Water Free Single;;255;
+D;DestPlate;;;8;;50.0;Water Free Single;;255;
+A;SourcePlate;;;9;;50.0;Water Free Single;;255;
+D;DestPlate;;;9;;50.0;Water Free Single;;255;
+A;SourcePlate;;;10;;50.0;Water Free Single;;255;
+D;DestPlate;;;10;;50.0;Water Free Single;;255;
+A;SourcePlate;;;11;;50.0;Water Free Single;;255;
+D;DestPlate;;;11;;50.0;Water Free Single;;255;
+A;SourcePlate;;;12;;50.0;Water Free Single;;255;
+D;DestPlate;;;12;;50.0;Water Free Single;;255;

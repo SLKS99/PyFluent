@@ -1,0 +1,25 @@
+name: Python Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install build dependencies
+      run: |
+        pip install build twine
+    - name: Build package
+      run: |
+        python -m build
+    - name: Check package
+      run: |
+        twine check dist/*
+

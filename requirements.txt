@@ -1,0 +1,2 @@
+pylabrobot>=0.1.0
+pythonnet>=3.0.0

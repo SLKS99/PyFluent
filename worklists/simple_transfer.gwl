@@ -1,0 +1,17 @@
+C;Worklist: SimpleTransfer
+C;Created: 2025-11-26 16:00:17
+C;Operations: 13
+C;
+C;Transfer samples from Source to Destination
+A;SourcePlate;;;1;;100.0;Water Free Single;;255;
+D;DestPlate;;;1;;100.0;Water Free Single;;255;
+B;
+A;SourcePlate;;;9;;100.0;Water Free Single;;255;
+D;DestPlate;;;9;;100.0;Water Free Single;;255;
+B;
+A;SourcePlate;;;17;;100.0;Water Free Single;;255;
+D;DestPlate;;;17;;100.0;Water Free Single;;255;
+B;
+A;SourcePlate;;;25;;100.0;Water Free Single;;255;
+D;DestPlate;;;25;;100.0;Water Free Single;;255;
+B;

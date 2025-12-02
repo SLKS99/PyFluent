@@ -1,0 +1,14 @@
+C;Worklist: Test1Sheryl_Compatible
+C;Created: 2025-11-26 16:27:04
+C;Operations: 10
+C;
+C;Worklist for Test1SherylV1 method
+C;Source: Source[001], Dest: Target[001]
+A;Source[001];;;1;;100.0;Water Free Single;;255;
+D;Target[001];;;1;;100.0;Water Free Single;;255;
+A;Source[001];;;2;;100.0;Water Free Single;;255;
+D;Target[001];;;2;;100.0;Water Free Single;;255;
+A;Source[001];;;3;;100.0;Water Free Single;;255;
+D;Target[001];;;3;;100.0;Water Free Single;;255;
+A;Source[001];;;4;;100.0;Water Free Single;;255;
+D;Target[001];;;4;;100.0;Water Free Single;;255;

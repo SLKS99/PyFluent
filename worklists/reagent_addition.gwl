@@ -1,0 +1,14 @@
+C;Worklist: ReagentAddition
+C;Created: 2025-11-26 16:00:17
+C;Operations: 10
+C;
+C;Add reagent to column 1
+A;Reservoir;;;1;;400.0;Water Free Single;;255;
+D;DestPlate;;;1;;50.0;Water Free Single;;255;
+D;DestPlate;;;2;;50.0;Water Free Single;;255;
+D;DestPlate;;;3;;50.0;Water Free Single;;255;
+D;DestPlate;;;4;;50.0;Water Free Single;;255;
+D;DestPlate;;;5;;50.0;Water Free Single;;255;
+D;DestPlate;;;6;;50.0;Water Free Single;;255;
+D;DestPlate;;;7;;50.0;Water Free Single;;255;
+D;DestPlate;;;8;;50.0;Water Free Single;;255;
