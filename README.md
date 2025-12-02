@@ -176,7 +176,7 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/PyFluent.git
+git clone https://github.com/SLKS99/PyFluent.git
 cd PyFluent
 
 # Install in development mode
@@ -262,7 +262,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/YOUR_USERNAME/PyFluent/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/SLKS99/PyFluent/issues)
 - **Documentation**: See `docs/` directory for detailed guides
 
 ---

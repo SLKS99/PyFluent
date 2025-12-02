@@ -24,7 +24,7 @@ setup(
     description="Python library for controlling Tecan Fluent liquid handling robots",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/YOUR_USERNAME/PyFluent",
+    url="https://github.com/SLKS99/PyFluent",
     packages=find_packages(exclude=["tests", "examples", "docs"]),
     classifiers=[
         "Development Status :: 3 - Alpha",
