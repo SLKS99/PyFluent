@@ -9,8 +9,10 @@ import os
 
 # Fix Unicode encoding for Windows console
 if sys.platform == 'win32':
-    import sys
     sys.stdout.reconfigure(encoding='utf-8')
+
+# Enable verbose backend logging for diagnosis
+os.environ["LOG_LEVEL"] = os.environ.get("LOG_LEVEL", "DEBUG")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
