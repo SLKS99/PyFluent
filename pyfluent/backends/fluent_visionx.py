@@ -792,42 +792,107 @@ class FluentVisionX(LiquidHandlerBackend):
             import traceback
     
     async def wait_for_channel(self, timeout: int = 60) -> bool:
-        """Wait for API execution channel to open.
+        """Wait for API execution channel to open and be ready.
         
         Args:
             timeout: Maximum time to wait in seconds (default: 60)
         
         Returns:
-            bool: True if channel opened, False if timeout
+            bool: True if channel opened and is ready, False if timeout
         """
         if self.simulation_mode:
             self.logger.info("Simulation: API channel ready")
             return True
         
+        # First check if we already have a channel
         if self.current_execution_channel is not None:
-            if hasattr(self.current_execution_channel, 'IsAlive') and self.current_execution_channel.IsAlive:
+            is_alive = False
+            if hasattr(self.current_execution_channel, 'IsAlive'):
+                is_alive = self.current_execution_channel.IsAlive
+            elif hasattr(self.current_execution_channel, 'IsOpen'):
+                is_alive = self.current_execution_channel.IsOpen
+            
+            if is_alive:
                 self.logger.info("Execution channel already available")
+                await asyncio.sleep(1.0)
                 return True
         
-        self.logger.info(f"Waiting for API channel (timeout: {timeout}s)...")
+        # Also check the list of open channels
+        if self._open_execution_channels:
+            for channel in self._open_execution_channels:
+                is_alive = False
+                if hasattr(channel, 'IsAlive'):
+                    is_alive = channel.IsAlive
+                elif hasattr(channel, 'IsOpen'):
+                    is_alive = channel.IsOpen
+                
+                if is_alive:
+                    self.logger.info("Found open execution channel in list")
+                    self.current_execution_channel = channel
+                    await asyncio.sleep(1.0)
+                    return True
         
+        self.logger.info(f"Waiting for API channel (timeout: {timeout}s)...")
+        self.logger.info(f"Current channel: {self.current_execution_channel}")
+        self.logger.info(f"Open channels: {len(self._open_execution_channels)}")
+        
+        # Try to force update the execution channel from runtime
+        if self.runtime:
+            try:
+                if hasattr(self.runtime, 'GetCurrentExecutionChannel'):
+                    self.current_execution_channel = self.runtime.GetCurrentExecutionChannel()
+                    self.logger.info(f"Forced update of execution channel: {self.current_execution_channel}")
+            except Exception as e:
+                self.logger.warning(f"Failed to force update execution channel: {e}")
+
         start_time = time.time()
         while time.time() - start_time < timeout:
+            # Check current channel
             if self.current_execution_channel is not None:
-                if hasattr(self.current_execution_channel, 'IsAlive') and self.current_execution_channel.IsAlive:
-                    self.logger.info("API channel opened!")
-                    return True
+                is_alive = False
+                if hasattr(self.current_execution_channel, 'IsAlive'):
+                    is_alive = self.current_execution_channel.IsAlive
+                elif hasattr(self.current_execution_channel, 'IsOpen'):
+                    is_alive = self.current_execution_channel.IsOpen
+                
+                if is_alive:
+                    self.logger.info("API channel opened! Waiting for it to be ready...")
+                    # Wait a bit to ensure the channel is fully ready to accept commands
+                    # Increased wait time to 5 seconds
+                    await asyncio.sleep(5.0)
+                    
+                    # Verify method is still running
+                    if self.runtime and hasattr(self.runtime, 'IsMethodRunning'):
+                        if self.runtime.IsMethodRunning():
+                            self.logger.info("✓ API channel is ready and method is running!")
+                            return True
+                        else:
+                            self.logger.warning("Channel opened but method is not running (stopped/aborted)")
+                    else:
+                        # If we can't check, assume it's ready
+                        self.logger.info("✓ API channel is ready!")
+                        return True
+            
+            # Also check the list of open channels
+            if self._open_execution_channels:
+                for channel in self._open_execution_channels:
+                    is_alive = False
+                    if hasattr(channel, 'IsAlive'):
+                        is_alive = channel.IsAlive
+                    elif hasattr(channel, 'IsOpen'):
+                        is_alive = channel.IsOpen
+                    
+                    if is_alive:
+                        self.logger.info("Found open execution channel!")
+                        self.current_execution_channel = channel
+                        await asyncio.sleep(2.0)
+                        self.logger.info("✓ API channel is ready!")
+                        return True
+            
             await asyncio.sleep(0.5)
         
         self.logger.warning(f"Timeout waiting for API channel after {timeout}s")
         return False
-
-        except Exception as e:
-            self.logger.error(f"Failed to run method {method_name}: {e}")
-            self._current_state = FluentState.ERROR
-            import traceback
-            traceback.print_exc()
-            raise TecanError(f"Failed to run method: {str(e)}", "VisionX", 1)
 
     def pause_method(self) -> bool:
         """Pause the running method (like C# PauseRun).
@@ -920,33 +985,64 @@ class FluentVisionX(LiquidHandlerBackend):
 
     def _get_execution_channel(self):
         """Get the current execution channel for sending commands."""
-        if self.current_execution_channel is not None:
-            return self.current_execution_channel
-        
-        # Try to get from runtime
+        # Always try to get from runtime first if available
         if self.runtime:
             try:
                 # The runtime might have a method to get the current channel
                 if hasattr(self.runtime, 'GetCurrentExecutionChannel'):
-                    self.current_execution_channel = self.runtime.GetCurrentExecutionChannel()
+                    channel = self.runtime.GetCurrentExecutionChannel()
+                    if channel:
+                        self.current_execution_channel = channel
+                        return channel
                 elif hasattr(self.runtime, 'ExecutionChannel'):
-                    self.current_execution_channel = self.runtime.ExecutionChannel
+                    channel = self.runtime.ExecutionChannel
+                    if channel:
+                        self.current_execution_channel = channel
+                        return channel
             except Exception as e:
                 self.logger.debug(f"Could not get execution channel from runtime: {e}")
+
+        if self.current_execution_channel is not None:
+            return self.current_execution_channel
         
-        return self.current_execution_channel
+        # If still None, try to find in open channels
+        if self._open_execution_channels:
+            return self._open_execution_channels[-1]
+            
+        return None
 
     def _execute_command(self, command):
         """Execute a command through the execution channel (like C# TriggerCommand)."""
         channel = self._get_execution_channel()
-        if channel is not None and hasattr(channel, 'IsAlive') and channel.IsAlive:
-            try:
-                channel.ExecuteCommand(command)
-                return True
-            except Exception as e:
-                self.logger.error(f"Error executing command: {e}")
-                raise TecanError(f"Command execution failed: {str(e)}", "VisionX", 1)
+        if channel is not None:
+            # Check if channel is alive
+            is_alive = False
+            if hasattr(channel, 'IsAlive'):
+                is_alive = channel.IsAlive
+            elif hasattr(channel, 'IsOpen'):
+                is_alive = channel.IsOpen
+            
+            if is_alive:
+                # Verify method is still running before sending command
+                if self.runtime and hasattr(self.runtime, 'IsMethodRunning'):
+                    if not self.runtime.IsMethodRunning():
+                        raise TecanError("Method is not running. Cannot execute commands.", "VisionX", 1)
+                
+                try:
+                    self.logger.info(f"Executing command on channel (IsAlive: {is_alive})")
+                    channel.ExecuteCommand(command)
+                    self.logger.info("✓ Command executed successfully - robot should move now")
+                    return True
+                except Exception as e:
+                    self.logger.error(f"Error executing command: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    raise TecanError(f"Command execution failed: {str(e)}", "VisionX", 1)
+            else:
+                self.logger.error(f"Channel exists but is not alive (IsAlive: {is_alive})")
+                raise TecanError("Execution channel is not alive. Make sure the method is running.", "VisionX", 1)
         else:
+            self.logger.error("No execution channel available")
             raise TecanError("No execution channel available. Run a method with API channel first.", "VisionX", 1)
 
     # ========================================================================
@@ -1424,6 +1520,9 @@ class FluentVisionX(LiquidHandlerBackend):
     ) -> None:
         """Aspirate liquid (PyLabRobot interface).
         
+        This wraps the direct API call (aspirate_volume) and converts PyLabRobot
+        resource names to FluentControl labware names.
+        
         Args:
             ops: List of aspiration operations
             use_channels: Channels to use
@@ -1432,8 +1531,7 @@ class FluentVisionX(LiquidHandlerBackend):
             self.logger.info(f"Simulation: Aspirating using channels {use_channels}")
             return
         
-        # Convert PyLabRobot operations to Tecan commands
-        # Support multi-channel with different volumes and wells
+        # Convert PyLabRobot operations to direct API format
         volumes = []
         well_offsets = []
         labware_name = None
@@ -1445,25 +1543,49 @@ class FluentVisionX(LiquidHandlerBackend):
                 volume = int(op.volume)
                 volumes.append(volume)
                 
-                # Get labware name (should be same for all ops)
-                if labware_name is None:
-                    labware_name = op.resource.name if hasattr(op, 'resource') and hasattr(op.resource, 'name') else "unknown"
+                # Extract labware name from PyLabRobot resource
+                # PyLabRobot: plate["A1"] returns a Well object with parent
+                if labware_name is None and hasattr(op, 'resource') and op.resource:
+                    resource = op.resource
+                    
+                    # Check if it's a Well object (has parent)
+                    if hasattr(resource, 'parent') and resource.parent:
+                        # Get parent plate name - this should match FluentControl labware name
+                        parent = resource.parent
+                        labware_name = parent.name if hasattr(parent, 'name') else None
+                        self.logger.debug(f"Extracted labware name from parent: {labware_name}")
+                        
+                        # Get well offset
+                        if hasattr(resource, 'index'):
+                            well_offset = resource.index
+                        elif hasattr(resource, 'name'):
+                            # Well name like "A1" - convert to offset
+                            from pyfluent.protocol import well_name_to_offset
+                            well_offset = well_name_to_offset(resource.name)
+                        else:
+                            well_offset = 0
+                    elif hasattr(resource, 'name'):
+                        # Direct resource (plate, etc.)
+                        labware_name = resource.name
+                        well_offset = 0
+                        self.logger.debug(f"Extracted labware name directly: {labware_name}")
+                    else:
+                        self.logger.warning(f"Could not extract labware name from resource: {resource}")
                 
-                # Get liquid class
+                # Get liquid class if specified
                 if hasattr(op, 'liquid_class') and op.liquid_class:
                     liquid_class = op.liquid_class
                 
-                # Get well offset if available
-                well_offset = 0
-                if hasattr(op, 'offset') and op.offset:
-                    well_offset = int(op.offset)
-                elif hasattr(op, 'well') and op.well:
-                    # Convert well name to offset if needed
-                    well_offset = 0  # Default
                 well_offsets.append(well_offset)
         
+        # Call the direct API method (which already works)
         if volumes and labware_name:
+            self.logger.info(f"PyLabRobot -> Direct API: aspirate_volume(volumes={volumes}, labware='{labware_name}', wells={well_offsets})")
             self.aspirate_volume(volumes, labware_name, liquid_class, well_offsets, use_channels)
+        else:
+            error_msg = f"Cannot aspirate: volumes={volumes}, labware_name={labware_name}"
+            self.logger.error(error_msg)
+            raise TecanError(error_msg, "VisionX", 1)
 
     async def dispense(
         self,
@@ -1471,6 +1593,9 @@ class FluentVisionX(LiquidHandlerBackend):
         use_channels: List[int]
     ) -> None:
         """Dispense liquid (PyLabRobot interface).
+        
+        This wraps the direct API call (dispense_volume) and converts PyLabRobot
+        resource names to FluentControl labware names.
         
         Args:
             ops: List of dispense operations
@@ -1480,8 +1605,7 @@ class FluentVisionX(LiquidHandlerBackend):
             self.logger.info(f"Simulation: Dispensing using channels {use_channels}")
             return
         
-        # Convert PyLabRobot operations to Tecan commands
-        # Support multi-channel with different volumes and wells
+        # Convert PyLabRobot operations to direct API format
         volumes = []
         well_offsets = []
         labware_name = None
@@ -1493,25 +1617,48 @@ class FluentVisionX(LiquidHandlerBackend):
                 volume = int(op.volume)
                 volumes.append(volume)
                 
-                # Get labware name (should be same for all ops)
-                if labware_name is None:
-                    labware_name = op.resource.name if hasattr(op, 'resource') and hasattr(op.resource, 'name') else "unknown"
+                # Extract labware name from PyLabRobot resource
+                if labware_name is None and hasattr(op, 'resource') and op.resource:
+                    resource = op.resource
+                    
+                    # Check if it's a Well object (has parent)
+                    if hasattr(resource, 'parent') and resource.parent:
+                        # Get parent plate name - this should match FluentControl labware name
+                        parent = resource.parent
+                        labware_name = parent.name if hasattr(parent, 'name') else None
+                        self.logger.debug(f"Extracted labware name from parent: {labware_name}")
+                        
+                        # Get well offset
+                        if hasattr(resource, 'index'):
+                            well_offset = resource.index
+                        elif hasattr(resource, 'name'):
+                            # Well name like "A1" - convert to offset
+                            from pyfluent.protocol import well_name_to_offset
+                            well_offset = well_name_to_offset(resource.name)
+                        else:
+                            well_offset = 0
+                    elif hasattr(resource, 'name'):
+                        # Direct resource (plate, etc.)
+                        labware_name = resource.name
+                        well_offset = 0
+                        self.logger.debug(f"Extracted labware name directly: {labware_name}")
+                    else:
+                        self.logger.warning(f"Could not extract labware name from resource: {resource}")
                 
-                # Get liquid class
+                # Get liquid class if specified
                 if hasattr(op, 'liquid_class') and op.liquid_class:
                     liquid_class = op.liquid_class
                 
-                # Get well offset if available
-                well_offset = 0
-                if hasattr(op, 'offset') and op.offset:
-                    well_offset = int(op.offset)
-                elif hasattr(op, 'well') and op.well:
-                    # Convert well name to offset if needed
-                    well_offset = 0  # Default
                 well_offsets.append(well_offset)
         
+        # Call the direct API method (which already works)
         if volumes and labware_name:
+            self.logger.info(f"PyLabRobot -> Direct API: dispense_volume(volumes={volumes}, labware='{labware_name}', wells={well_offsets})")
             self.dispense_volume(volumes, labware_name, liquid_class, well_offsets, use_channels)
+        else:
+            error_msg = f"Cannot dispense: volumes={volumes}, labware_name={labware_name}"
+            self.logger.error(error_msg)
+            raise TecanError(error_msg, "VisionX", 1)
 
     async def pick_up_tips(
         self,
@@ -1519,6 +1666,9 @@ class FluentVisionX(LiquidHandlerBackend):
         use_channels: List[int]
     ) -> None:
         """Pick up tips (PyLabRobot interface).
+        
+        This wraps the direct API call (get_tips) and converts PyLabRobot
+        format to direct API format.
         
         Args:
             ops: List of pickup operations
@@ -1528,10 +1678,16 @@ class FluentVisionX(LiquidHandlerBackend):
             self.logger.info(f"Simulation: Picking up tips on channels {use_channels}")
             return
         
-        # Get tips using the first operation's resource info
-        if ops:
-            tip_resource = ops[0].resource.name if hasattr(ops[0], 'resource') else "default_tips"
-            self.get_tips(diti_type=tip_resource)
+        self.logger.info(f"PyLabRobot -> Direct API: pick_up_tips() -> get_tips()")
+        
+        # Get tips - use default diti_type since PyLabRobot resources don't have this info
+        # Extract tip_indices from use_channels
+        tip_indices = use_channels if use_channels else None
+        self.logger.info(f"Calling direct API: get_tips(diti_type='FCA, 200ul', tip_indices={tip_indices})")
+        self.get_tips(
+            diti_type="TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:FCA, 200ul",  # Default
+            tip_indices=tip_indices
+        )
 
     async def drop_tips(
         self,
@@ -1539,6 +1695,9 @@ class FluentVisionX(LiquidHandlerBackend):
         use_channels: List[int]
     ) -> None:
         """Drop tips (PyLabRobot interface).
+        
+        This wraps the direct API call (drop_tips_to_location) and converts PyLabRobot
+        format to direct API format.
         
         Args:
             ops: List of drop operations
@@ -1548,10 +1707,16 @@ class FluentVisionX(LiquidHandlerBackend):
             self.logger.info(f"Simulation: Dropping tips on channels {use_channels}")
             return
         
-        # Drop tips using the first operation's resource info
-        if ops:
-            waste_location = ops[0].resource.name if hasattr(ops[0], 'resource') else "FCA Thru Deck Waste Chute_1"
-            self.drop_tips_to_location(waste_location)
+        self.logger.info(f"PyLabRobot -> Direct API: drop_tips() -> drop_tips_to_location()")
+        
+        # Drop tips - use default waste location
+        # Extract tip_indices from use_channels
+        tip_indices = use_channels if use_channels else None
+        self.logger.info(f"Calling direct API: drop_tips_to_location(labware='MCA Thru Deck Waste Chute', tip_indices={tip_indices})")
+        self.drop_tips_to_location(
+            labware="MCA Thru Deck Waste Chute with Tip Drop Guide_2",  # Default waste
+            tip_indices=tip_indices
+        )
 
     async def aspirate96(self, *args: Any, **kwargs: Any) -> None:
         """Not implemented for VisionX backend."""
