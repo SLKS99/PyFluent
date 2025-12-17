@@ -46,13 +46,33 @@ async def restart_fluentcontrol():
     print("\n2. Waiting for processes to terminate...")
     time.sleep(3)
     
-    # Step 2: Start FluentControl fresh
+# Step 2: Start FluentControl fresh
     print("\n3. Starting FluentControl...")
     backend = FluentVisionX(simulation_mode=False)
     
     try:
         await backend.setup()
         print("OK: FluentControl started successfully!")
+    # Extra runtime status wait (up to 180s) to catch slow initialization
+    start = time.time()
+    while time.time() - start < 180:
+        rt = getattr(backend, "runtime", None)
+        status = None
+        if rt:
+            try:
+                if hasattr(rt, "GetFluentStatus"):
+                    status = rt.GetFluentStatus()
+                elif hasattr(rt, "IsMethodRunning"):
+                    status = f"IsMethodRunning={rt.IsMethodRunning()}"
+            except Exception as e:
+                print(f"Status check error: {e}")
+        print(f"[WaitRuntime] t={int(time.time()-start)}s status={status}")
+        # If we have a status string that looks like EditMode or Ready, break
+        if status and ("Edit" in str(status) or "Ready" in str(status)):
+            print("Runtime reached ready/edit state.")
+            break
+        await asyncio.sleep(5)
+
         print("\nFluentControl is now running. You can:")
         print("  - Run your method with API channel")
         print("  - Then run the test scripts")
