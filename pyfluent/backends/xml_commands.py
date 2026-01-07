@@ -54,7 +54,7 @@ def make_get_tips_xml(
                                                 <Alias Type="Tecan.Core.Instrument.DeviceAlias.DeviceAlias">
                                                     <DeviceAlias>Instrument=1/Device=LIHA:1</DeviceAlias>
                                                 </Alias>
-                                                <ID><AvailableID>USB:TECAN,MYRIUS,1310005667/LIHA:1</AvailableID></ID>
+                                                <ID><AvailableID></AvailableID></ID>
                                                 <Data Type="Tecan.Core.Scripting.Helpers.ScriptStatementBaseDataV1">
                                                     <ScriptStatementBaseDataV1>
                                                         <IsBreakpoint>False</IsBreakpoint>
@@ -185,7 +185,7 @@ def make_aspirate_xml(
                                                                     <DeviceAlias>Instrument=1/Device=LIHA:1</DeviceAlias>
                                                                 </Alias>
                                                                 <ID>
-                                                                    <AvailableID>USB:TECAN,MYRIUS,1310005667/LIHA:1</AvailableID>
+                                                                    <AvailableID></AvailableID>
                                                                 </ID>
                                                                 <Data Type="Tecan.Core.Scripting.Helpers.ScriptStatementBaseDataV1">
                                                                     <ScriptStatementBaseDataV1>
@@ -313,7 +313,7 @@ def make_dispense_xml(
                                                                     <DeviceAlias>Instrument=1/Device=LIHA:1</DeviceAlias>
                                                                 </Alias>
                                                                 <ID>
-                                                                    <AvailableID>USB:TECAN,MYRIUS,1310005667/LIHA:1</AvailableID>
+                                                                    <AvailableID></AvailableID>
                                                                 </ID>
                                                                 <Data Type="Tecan.Core.Scripting.Helpers.ScriptStatementBaseDataV1">
                                                                     <ScriptStatementBaseDataV1>
@@ -389,7 +389,7 @@ def make_drop_tips_xml(
                                                 <Alias Type="Tecan.Core.Instrument.DeviceAlias.DeviceAlias">
                                                     <DeviceAlias>Instrument=1/Device=LIHA:1</DeviceAlias>
                                                 </Alias>
-                                                <ID><AvailableID>USB:TECAN,MYRIUS,1310005667/LIHA:1</AvailableID></ID>
+                                                <ID><AvailableID></AvailableID></ID>
                                                 <Data Type="Tecan.Core.Scripting.Helpers.ScriptStatementBaseDataV1">
                                                     <ScriptStatementBaseDataV1>
                                                         <IsBreakpoint>False</IsBreakpoint>

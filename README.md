@@ -134,11 +134,11 @@ wl = convert_operations_to_worklist(operations, name="MyProtocol")
 wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 ```
 
-##  Documentation
+## Documentation
 
-- **[Full Documentation](docs/README.md)** - Complete guide with examples
-- **[Worklists Guide](docs/worklists.md)** - Worklist generation and conversion
-- **[Architecture](docs/ARCHITECTURE.md)** - Internal architecture details
+- **[Full Documentation](docs/README.md)** — complete guide with examples
+- **[Worklists Guide](docs/worklists.md)** — worklist generation and conversion
+- **[Architecture](docs/ARCHITECTURE.md)** — internal architecture details
 
 ##  Key Features
 

@@ -494,10 +494,16 @@ class Protocol:
                 elif cmd.command_type == CommandType.SUBROUTINE:
                     be.run_subroutine(cmd.parameters["subroutine_name"])
                 
+                # Wait a bit between commands to allow simulation to process
+                # This is especially important in simulation mode
+                await asyncio.sleep(0.5)
+                
                 print(f"  [OK]")
                 
             except Exception as e:
                 print(f"  [ERROR] {e}")
+                import traceback
+                traceback.print_exc()
                 raise
         
         print("-" * 40)

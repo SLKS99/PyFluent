@@ -54,6 +54,14 @@ tecan_sila_testing/
 *.sln
 *.msi
 
+# Ignore unite_labs_fluent folder (reference implementation, not part of PyFluent)
+unite_labs_fluent/
+**/unite_labs_fluent/
+
+# Ignore Tecan folder (Windows ProgramData, not part of repository)
+Tecan/
+**/Tecan/
+
 # Build artifacts
 *.whl
 *.tar.gz

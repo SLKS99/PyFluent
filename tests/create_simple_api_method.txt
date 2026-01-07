@@ -1,0 +1,47 @@
+HOW TO CREATE A SIMPLE API CHANNEL METHOD (No Liquid Handling Actions)
+========================================================================
+
+You DON'T need to add aspiration/dispense actions! You just need a method with an API Channel action.
+
+THE PROBLEM: The current "demo" method may not have the right API Channel configuration for simulation mode.
+
+SOLUTION: Create a simple method that ONLY opens an API channel, without liquid handling actions.
+
+STEPS IN FLUENTCONTROL:
+======================
+
+1. Open FluentControl in Simulation Mode
+
+2. Go to Methods tab
+
+3. Create New Method: "Simple_API_Channel"
+
+4. In Method Editor:
+   - Add ONE action: "API Channel"
+   - Configure it as:
+     * Action Type: "Start API Channel"
+     * Mode: "Wait Indefinitely" or "Loop"
+     * NO other actions needed!
+
+5. Save the method
+
+WHY THIS SHOULD WORK:
+====================
+
+- In non-simulation mode, you had a simple API method
+- In simulation mode, you need a similar method that opens the channel
+- The API Channel action keeps the method running indefinitely
+- PyFluent can then send commands through this channel
+- No liquid handling actions needed - just the channel opener
+
+TEST IT:
+=======
+
+After creating this method:
+
+1. Run: python tests/diagnose_method.py
+2. Look for "Simple_API_Channel" in the list
+3. It should stay running (not complete immediately)
+4. Then run: python tests/run_protocol_simulation.py
+
+If this doesn't work, the issue might be that simulation mode requires methods with actual actions to simulate. In that case, we'd need to add minimal actions (like move to a position) that can be controlled via the API channel.

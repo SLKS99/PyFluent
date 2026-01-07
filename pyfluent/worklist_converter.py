@@ -8,15 +8,54 @@ to Tecan worklist files (GWL/CSV format).
 from typing import List, Optional, Union, Dict, Any
 from dataclasses import dataclass
 from .worklist import Worklist, WorklistFormat, WorklistOperation
-from pylabrobot.liquid_handling.standard import (
-    Aspiration,
-    Dispense,
-    Pickup,
-    Drop,
-    PickupTipRack,
-    DropTipRack,
-)
-from pylabrobot.resources import Resource, Well
+
+# Try to import pylabrobot for compatibility, but provide fallbacks for standalone use
+try:
+    from pylabrobot.liquid_handling.standard import (
+        Aspiration,
+        Dispense,
+        Pickup,
+        Drop,
+        PickupTipRack,
+        DropTipRack,
+    )
+    from pylabrobot.resources import Resource, Well
+    PYLABROBOT_AVAILABLE = True
+except ImportError:
+    PYLABROBOT_AVAILABLE = False
+    # Define minimal fallback classes for standalone use
+    class Resource:
+        def __init__(self, name: str = ""):
+            self.name = name
+
+    class Well:
+        def __init__(self, name: str = ""):
+            self.name = name
+
+    # Define minimal operation classes
+    class Aspiration:
+        def __init__(self, volume=None, **kwargs):
+            self.volume = volume
+
+    class Dispense:
+        def __init__(self, volume=None, **kwargs):
+            self.volume = volume
+
+    class Pickup:
+        def __init__(self, **kwargs):
+            pass
+
+    class Drop:
+        def __init__(self, **kwargs):
+            pass
+
+    class PickupTipRack:
+        def __init__(self, **kwargs):
+            pass
+
+    class DropTipRack:
+        def __init__(self, **kwargs):
+            pass
 
 
 @dataclass
