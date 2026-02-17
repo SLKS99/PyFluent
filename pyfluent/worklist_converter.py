@@ -8,6 +8,7 @@ to Tecan worklist files (GWL/CSV format).
 from typing import List, Optional, Union, Dict, Any
 from dataclasses import dataclass
 from .worklist import Worklist, WorklistFormat, WorklistOperation
+from .constants import DEFAULT_LIQUID_CLASS, DEFAULT_DITI_TYPE
 
 # Try to import pylabrobot for compatibility, but provide fallbacks for standalone use
 try:
@@ -65,25 +66,28 @@ class OperationRecord:
     resource: Optional[Resource] = None
     well: Optional[Union[str, Well]] = None
     volume: float = 0.0
-    liquid_class: str = "Water Test No Detect"
+    liquid_class: str = DEFAULT_LIQUID_CLASS
     tip_type: str = ""
     comment: str = ""
 
 
 def well_to_position(well: Union[str, Well, int]) -> int:
     """
-    Convert well to Tecan position number.
+    Convert well to Tecan position number (1-based for worklist format).
     
-    Tecan uses column-major ordering:
+    Tecan worklist format uses 1-based column-major ordering:
     - A1 = 1, B1 = 2, ..., H1 = 8
     - A2 = 9, B2 = 10, ..., H2 = 16
     - etc.
+    
+    NOTE: This returns 1-based positions for worklist/GWL format.
+    For 0-based offsets (used in XML commands), use well_name_to_offset() from protocol.py.
     
     Args:
         well: Well name (e.g., "A1"), Well object, or position number
     
     Returns:
-        Position number (1-based)
+        Position number (1-based for worklist format)
     """
     if isinstance(well, int):
         return well
@@ -111,8 +115,25 @@ def well_to_position(well: Union[str, Well, int]) -> int:
     row = ord(row_letter) - ord('A')  # 0-based
     col = int(col_str) - 1  # 0-based
     
-    # Column-major: position = col * 8 + row + 1
+    # Column-major: position = col * 8 + row + 1 (1-based for worklist)
     return col * 8 + row + 1
+
+
+def well_to_offset(well: Union[str, Well, int]) -> int:
+    """
+    Convert well to 0-based offset (for XML commands).
+    
+    This is the same as well_to_position but returns 0-based offset
+    used in XML command generation.
+    
+    Args:
+        well: Well name (e.g., "A1"), Well object, or offset
+    
+    Returns:
+        Offset (0-based for XML commands)
+    """
+    position = well_to_position(well)
+    return position - 1  # Convert 1-based position to 0-based offset
 
 
 def resource_to_labware_name(resource: Resource) -> str:
@@ -136,8 +157,8 @@ def resource_to_labware_name(resource: Resource) -> str:
 def convert_operations_to_worklist(
     operations: List[OperationRecord],
     name: str = "ConvertedProtocol",
-    liquid_class: str = "Water Test No Detect",
-    tip_type: str = "TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:FCA, 200ul"
+    liquid_class: str = DEFAULT_LIQUID_CLASS,
+    tip_type: str = DEFAULT_DITI_TYPE
 ) -> Worklist:
     """
     Convert a list of PyLabRobot operations to a Tecan worklist.
@@ -232,7 +253,7 @@ def convert_pylabrobot_operations(
     pickups: Optional[List[Pickup]] = None,
     drops: Optional[List[Drop]] = None,
     name: str = "ConvertedProtocol",
-    liquid_class: str = "Water Test No Detect"
+    liquid_class: str = DEFAULT_LIQUID_CLASS
 ) -> Worklist:
     """
     Convert PyLabRobot operation objects to a Tecan worklist.
@@ -273,12 +294,13 @@ def convert_pylabrobot_operations(
         for pickup in pickups:
             resource = pickup.resource if hasattr(pickup, 'resource') else None
             well = None
+            # Extract well name if resource is a Well object
             if resource and hasattr(resource, 'name'):
-                # Try to get well from resource
-                pass
+                well = resource.name
             operations.append(OperationRecord(
                 operation_type="pickup",
                 resource=resource,
+                well=well,
                 comment="Pick up tips"
             ))
     
@@ -369,7 +391,7 @@ class WorklistRecorder:
     def __init__(
         self,
         name: str = "RecordedProtocol",
-        liquid_class: str = "Water Test No Detect"
+        liquid_class: str = DEFAULT_LIQUID_CLASS
     ):
         self.name = name
         self.liquid_class = liquid_class

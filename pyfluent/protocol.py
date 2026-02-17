@@ -10,6 +10,14 @@ from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 import csv
 import io
+import asyncio
+
+from .constants import (
+    DEFAULT_LIQUID_CLASS,
+    DEFAULT_FCA_WASTE,
+    DITI_200UL_FILTERED_SBS,
+    ROWS_96_WELL,
+)
 
 
 class CommandType(Enum):
@@ -50,7 +58,7 @@ class Transfer:
     dest_labware: str
     dest_well: str
     volume: float  # in µL
-    liquid_class: str = "Water Free Single"
+    liquid_class: str = DEFAULT_LIQUID_CLASS
     
     @property
     def source_well_offset(self) -> int:
@@ -86,10 +94,17 @@ def well_name_to_offset(well_name: str) -> int:
     return col_num * 8 + row_num
 
 
-def offset_to_well_name(offset: int, rows: int = 8) -> str:
+def offset_to_well_name(offset: int, rows: int = ROWS_96_WELL) -> str:
     """
     Convert 0-based offset to well name (e.g., 0 -> 'A1').
     Assumes column-major ordering.
+    
+    Args:
+        offset: 0-based well offset
+        rows: Number of rows in the plate (default: 8 for 96-well)
+    
+    Returns:
+        Well name (e.g., 'A1', 'B1', etc.)
     """
     col = offset // rows
     row = offset % rows
@@ -119,7 +134,7 @@ class Protocol:
         self.commands: List[ProtocolCommand] = []
         self.transfers: List[Transfer] = []
         self.current_tips_loaded = False
-        self.liquid_class = "Water Free Single"  # Default liquid class
+        self.liquid_class = DEFAULT_LIQUID_CLASS
     
     def set_liquid_class(self, liquid_class: str):
         """Set the default liquid class for transfers."""
@@ -131,7 +146,7 @@ class Protocol:
     
     def get_tips(
         self,
-        tip_type: str = "TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:FCA, 200ul Filtered SBS",
+        tip_type: str = DITI_200UL_FILTERED_SBS,
         airgap_volume: int = 10,
         airgap_speed: int = 70
     ):
@@ -155,7 +170,7 @@ class Protocol:
         self.current_tips_loaded = True
         return self
     
-    def drop_tips(self, waste_location: str = "FCA Thru Deck Waste Chute_1"):
+    def drop_tips(self, waste_location: str = DEFAULT_FCA_WASTE):
         """
         Add a drop tips command to the protocol.
         

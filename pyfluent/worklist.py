@@ -16,6 +16,8 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
 
+from .constants import DEFAULT_LIQUID_CLASS
+
 
 class WorklistFormat(Enum):
     """Supported worklist formats."""
@@ -95,7 +97,7 @@ class Worklist:
     def __init__(
         self,
         name: str = "Worklist",
-        liquid_class: str = "Water Free Single",
+        liquid_class: str = DEFAULT_LIQUID_CLASS,
         tip_type: str = "",
         default_tip_mask: int = 255  # All 8 tips
     ):
@@ -104,7 +106,7 @@ class Worklist:
         
         Args:
             name: Name of the worklist
-            liquid_class: Default liquid class for operations
+            liquid_class: Default liquid class for operations (from constants)
             tip_type: Default tip type
             default_tip_mask: Default tip mask (255 = all 8 tips)
         """
@@ -398,7 +400,7 @@ def create_plate_transfer_worklist(
     volume: float,
     wells: Optional[List[str]] = None,
     num_wells: int = 96,
-    liquid_class: str = "Water Free Single"
+    liquid_class: str = DEFAULT_LIQUID_CLASS
 ) -> Worklist:
     """
     Create a worklist for plate-to-plate transfer.
@@ -440,7 +442,7 @@ def create_reagent_addition_worklist(
     dest_plate: str,
     dest_wells: List[str],
     volume: float,
-    liquid_class: str = "Water Free Single"
+    liquid_class: str = DEFAULT_LIQUID_CLASS
 ) -> Worklist:
     """
     Create a worklist for adding reagent to multiple wells.

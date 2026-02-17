@@ -19,6 +19,17 @@ import asyncio
 import warnings
 from enum import Enum, auto
 
+# Import constants for default values
+from pyfluent.constants import (
+    DEFAULT_LIQUID_CLASS,
+    DEFAULT_DITI_TYPE,
+    DEFAULT_MCA_WASTE,
+    DEFAULT_AIRGAP_VOLUME,
+    DEFAULT_AIRGAP_SPEED,
+)
+# Import well conversion function
+from pyfluent.protocol import well_name_to_offset
+
 # CRITICAL: Set coinit_flags BEFORE importing comtypes
 # This is required for COM event handling to work properly
 if not hasattr(sys, 'coinit_flags'):
@@ -3114,17 +3125,17 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
 
     def get_tips(
         self,
-        airgap_volume: int = 10,
-        airgap_speed: int = 70,
-        diti_type: str = "TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:FCA, 200ul",
+        airgap_volume: int = DEFAULT_AIRGAP_VOLUME,
+        airgap_speed: int = DEFAULT_AIRGAP_SPEED,
+        diti_type: str = DEFAULT_DITI_TYPE,
         tip_indices: Optional[List[int]] = None
     ):
         """Get tips (like C# GetTips).
         
         Args:
-            airgap_volume: Air gap volume in µL (default: 10)
-            airgap_speed: Air gap speed (default: 70)
-            diti_type: DiTi type string (default: FCA, 200ul)
+            airgap_volume: Air gap volume in µL (default from constants)
+            airgap_speed: Air gap speed (default from constants)
+            diti_type: DiTi type string (default from constants)
             tip_indices: List of tip indices to use (0-7). If None, uses all 8 tips.
         """
         try:
@@ -3188,7 +3199,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         self,
         volumes: Union[int, List[int]],
         labware: str,
-        liquid_class: str = "Water Test No Detect",
+        liquid_class: str = DEFAULT_LIQUID_CLASS,
         well_offsets: Optional[Union[int, List[int]]] = None,
         tip_indices: Optional[List[int]] = None
     ):
@@ -3197,7 +3208,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         Args:
             volumes: Volume(s) to aspirate in µL. Can be single int or list for multi-channel.
             labware: Name of the labware to aspirate from
-            liquid_class: Liquid class to use (default: "Water Test No Detect")
+            liquid_class: Liquid class to use (default from constants)
             well_offsets: Well offset(s). Can be single int or list. If None, all from well 0.
             tip_indices: List of tip indices to use. If None, uses all tips.
         """
@@ -3236,7 +3247,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         self,
         volumes: Union[int, List[int]],
         labware: str,
-        liquid_class: str = "Water Test No Detect",
+        liquid_class: str = DEFAULT_LIQUID_CLASS,
         well_offsets: Optional[Union[int, List[int]]] = None,
         tip_indices: Optional[List[int]] = None
     ):
@@ -3245,7 +3256,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         Args:
             volumes: Volume(s) to dispense in µL. Can be single int or list for multi-channel.
             labware: Name of the labware to dispense to
-            liquid_class: Liquid class to use (default: "Water Test No Detect")
+            liquid_class: Liquid class to use (default from constants)
             well_offsets: Well offset(s). Can be single int or list. If None, all to well 0.
             tip_indices: List of tip indices to use. If None, uses all tips.
         """
@@ -3281,7 +3292,336 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
             raise TecanError(f"Failed to dispense: {str(e)}", "VisionX", 1)
 
     # ========================================================================
-    # GRIPPER OPERATIONS (like C# GetFingers, DropFingers)
+    # FCA (LiHa) MOVEMENT OPERATIONS
+    # ========================================================================
+
+    def fca_move_to_position(
+        self,
+        labware: str,
+        well_offset: int = 0,
+        z_position: Optional[float] = None,
+        tip_indices: Optional[List[int]] = None
+    ):
+        """Move FCA (LiHa) to a specific position above labware.
+        
+        Args:
+            labware: Target labware name
+            well_offset: Well offset (0-based)
+            z_position: Z position in mm (None = safe travel height)
+            tip_indices: List of tip indices to move. If None, uses all 8 tips.
+        """
+        try:
+            from .xml_commands import make_fca_move_to_position_xml
+            
+            self.logger.info(f"FCA moving to {labware} well offset {well_offset}")
+            xml = make_fca_move_to_position_xml(labware, well_offset, z_position, tip_indices=tip_indices)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.0)
+            
+            self.logger.info(f"✓ FCA moved to position")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to move FCA: {e}")
+            raise TecanError(f"Failed to move FCA: {str(e)}", "VisionX", 1)
+
+    def fca_move_to_safe_position(self):
+        """Move FCA (LiHa) to safe/home position."""
+        try:
+            from .xml_commands import make_fca_move_to_safe_position_xml
+            
+            self.logger.info("FCA moving to safe position")
+            xml = make_fca_move_to_safe_position_xml()
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.0)
+            
+            self.logger.info("✓ FCA at safe position")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to move FCA to safe position: {e}")
+            raise TecanError(f"Failed to move FCA to safe position: {str(e)}", "VisionX", 1)
+
+    # ========================================================================
+    # MCA (96-CHANNEL) OPERATIONS
+    # ========================================================================
+
+    def mca_get_tips(
+        self,
+        diti_type: str = "TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:MCA, 150ul Filtered SBS",
+        airgap_volume: int = DEFAULT_AIRGAP_VOLUME,
+        airgap_speed: int = DEFAULT_AIRGAP_SPEED
+    ):
+        """Get tips with MCA (96-channel arm).
+        
+        Args:
+            diti_type: DiTi type string for MCA tips
+            airgap_volume: Air gap volume in µL
+            airgap_speed: Air gap speed
+        """
+        try:
+            from .xml_commands import make_mca_get_tips_xml
+            
+            self.logger.info(f"MCA getting tips: {diti_type}")
+            xml = make_mca_get_tips_xml(diti_type, airgap_volume, airgap_speed)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.5)
+            
+            self.logger.info("✓ MCA tips acquired")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get MCA tips: {e}")
+            raise TecanError(f"Failed to get MCA tips: {str(e)}", "VisionX", 1)
+
+    def mca_drop_tips(self, labware: str = DEFAULT_MCA_WASTE):
+        """Drop tips with MCA (96-channel arm).
+        
+        Args:
+            labware: Labware name (e.g., waste chute)
+        """
+        try:
+            from .xml_commands import make_mca_drop_tips_xml
+            
+            self.logger.info(f"MCA dropping tips to {labware}")
+            xml = make_mca_drop_tips_xml(labware)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.0)
+            
+            self.logger.info("✓ MCA tips dropped")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to drop MCA tips: {e}")
+            raise TecanError(f"Failed to drop MCA tips: {str(e)}", "VisionX", 1)
+
+    def mca_aspirate(
+        self,
+        labware: str,
+        volume: int,
+        liquid_class: str = DEFAULT_LIQUID_CLASS,
+        well_offset: int = 0
+    ):
+        """Aspirate with MCA (96-channel arm).
+        
+        Args:
+            labware: Labware name
+            volume: Volume to aspirate in µL (same for all 96 channels)
+            liquid_class: Liquid class name
+            well_offset: Well offset (0-based, typically 0 for full plate)
+        """
+        try:
+            from .xml_commands import make_mca_aspirate_xml
+            
+            self.logger.info(f"MCA aspirating {volume}µL from {labware}")
+            xml = make_mca_aspirate_xml(labware, volume, liquid_class, well_offset)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.5)
+            
+            self.logger.info(f"✓ MCA aspirated {volume}µL")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to aspirate with MCA: {e}")
+            raise TecanError(f"Failed to aspirate with MCA: {str(e)}", "VisionX", 1)
+
+    def mca_dispense(
+        self,
+        labware: str,
+        volume: int,
+        liquid_class: str = DEFAULT_LIQUID_CLASS,
+        well_offset: int = 0
+    ):
+        """Dispense with MCA (96-channel arm).
+        
+        Args:
+            labware: Labware name
+            volume: Volume to dispense in µL (same for all 96 channels)
+            liquid_class: Liquid class name
+            well_offset: Well offset (0-based, typically 0 for full plate)
+        """
+        try:
+            from .xml_commands import make_mca_dispense_xml
+            
+            self.logger.info(f"MCA dispensing {volume}µL to {labware}")
+            xml = make_mca_dispense_xml(labware, volume, liquid_class, well_offset)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.5)
+            
+            self.logger.info(f"✓ MCA dispensed {volume}µL")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to dispense with MCA: {e}")
+            raise TecanError(f"Failed to dispense with MCA: {str(e)}", "VisionX", 1)
+
+    def mca_move_to_safe_position(self):
+        """Move MCA (96-channel arm) to safe/home position."""
+        try:
+            from .xml_commands import make_mca_move_to_safe_position_xml
+            
+            self.logger.info("MCA moving to safe position")
+            xml = make_mca_move_to_safe_position_xml()
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.0)
+            
+            self.logger.info("✓ MCA at safe position")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to move MCA to safe position: {e}")
+            raise TecanError(f"Failed to move MCA to safe position: {str(e)}", "VisionX", 1)
+
+    # ========================================================================
+    # RGA (GRIPPER) OPERATIONS
+    # ========================================================================
+
+    def rga_get_labware(
+        self,
+        labware: str,
+        grip_force: int = 5,
+        grip_width: Optional[float] = None
+    ):
+        """Pick up labware with RGA (robotic gripper arm).
+        
+        Args:
+            labware: Labware name to pick up
+            grip_force: Grip force (1-10 scale, 5 is medium)
+            grip_width: Grip width in mm (None = auto-detect from labware)
+        """
+        try:
+            from .xml_commands import make_rga_get_labware_xml
+            
+            self.logger.info(f"RGA picking up labware: {labware}")
+            xml = make_rga_get_labware_xml(labware, grip_force, grip_width)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.5)
+            
+            self.logger.info(f"✓ RGA picked up {labware}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get labware with RGA: {e}")
+            raise TecanError(f"Failed to get labware with RGA: {str(e)}", "VisionX", 1)
+
+    def rga_put_labware(
+        self,
+        labware: str,
+        target_location: str
+    ):
+        """Place labware with RGA (robotic gripper arm).
+        
+        Args:
+            labware: Labware name being held
+            target_location: Target location to place labware
+        """
+        try:
+            from .xml_commands import make_rga_put_labware_xml
+            
+            self.logger.info(f"RGA placing labware {labware} at {target_location}")
+            xml = make_rga_put_labware_xml(labware, target_location)
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.5)
+            
+            self.logger.info(f"✓ RGA placed {labware} at {target_location}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to put labware with RGA: {e}")
+            raise TecanError(f"Failed to put labware with RGA: {str(e)}", "VisionX", 1)
+
+    def rga_move_to_safe_position(self):
+        """Move RGA (gripper) to safe/home position."""
+        try:
+            from .xml_commands import make_rga_move_to_safe_position_xml
+            
+            self.logger.info("RGA moving to safe position")
+            xml = make_rga_move_to_safe_position_xml()
+            self._execute_command(xml)
+            
+            if self.simulation_mode:
+                import time
+                time.sleep(1.0)
+            
+            self.logger.info("✓ RGA at safe position")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to move RGA to safe position: {e}")
+            raise TecanError(f"Failed to move RGA to safe position: {str(e)}", "VisionX", 1)
+
+    def rga_transfer_labware(
+        self,
+        labware: str,
+        target_location: str,
+        grip_force: int = 5
+    ):
+        """Complete labware transfer using RGA (pick up and place).
+        
+        This is a convenience method that combines rga_get_labware and rga_put_labware.
+        
+        Args:
+            labware: Labware name to transfer
+            target_location: Target location to place labware
+            grip_force: Grip force (1-10 scale)
+        """
+        self.logger.info(f"RGA transferring {labware} to {target_location}")
+        self.rga_get_labware(labware, grip_force)
+        self.rga_put_labware(labware, target_location)
+        self.logger.info(f"✓ RGA transfer complete")
+
+    # ========================================================================
+    # COMBINED MOVEMENT OPERATIONS
+    # ========================================================================
+
+    def move_all_arms_to_safe_position(self):
+        """Move all arms (FCA, MCA, RGA) to their safe positions.
+        
+        This is useful before starting a new operation or at the end of a protocol.
+        """
+        self.logger.info("Moving all arms to safe positions...")
+        
+        errors = []
+        
+        try:
+            self.fca_move_to_safe_position()
+        except Exception as e:
+            errors.append(f"FCA: {e}")
+        
+        try:
+            self.mca_move_to_safe_position()
+        except Exception as e:
+            errors.append(f"MCA: {e}")
+        
+        try:
+            self.rga_move_to_safe_position()
+        except Exception as e:
+            errors.append(f"RGA: {e}")
+        
+        if errors:
+            self.logger.warning(f"Some arms failed to move to safe position: {errors}")
+        else:
+            self.logger.info("✓ All arms at safe positions")
+
+    # ========================================================================
+    # GRIPPER FINGER OPERATIONS (like C# GetFingers, DropFingers)
     # ========================================================================
 
     def get_fingers(self, device_alias: str, gripper_fingers: str):
@@ -3473,7 +3813,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         volumes = []
         well_offsets = []
         labware_name = None
-        liquid_class = "Water Test No Detect"
+        liquid_class = DEFAULT_LIQUID_CLASS
         
         for i, channel in enumerate(use_channels):
             if i < len(ops):
@@ -3483,6 +3823,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
                 
                 # Extract labware name from PyLabRobot resource
                 # PyLabRobot: plate["A1"] returns a Well object with parent
+                well_offset = 0
                 if labware_name is None and hasattr(op, 'resource') and op.resource:
                     resource = op.resource
                     
@@ -3497,8 +3838,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
                         if hasattr(resource, 'index'):
                             well_offset = resource.index
                         elif hasattr(resource, 'name'):
-                            # Well name like "A1" - convert to offset
-                            from pyfluent.protocol import well_name_to_offset
+                            # Well name like "A1" - convert to offset (already imported at top)
                             well_offset = well_name_to_offset(resource.name)
                         else:
                             well_offset = 0
@@ -3543,7 +3883,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         volumes = []
         well_offsets = []
         labware_name = None
-        liquid_class = "Water Test No Detect"
+        liquid_class = DEFAULT_LIQUID_CLASS
         
         for i, channel in enumerate(use_channels):
             if i < len(ops):
@@ -3552,6 +3892,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
                 volumes.append(volume)
                 
                 # Extract labware name from PyLabRobot resource
+                well_offset = 0
                 if labware_name is None and hasattr(op, 'resource') and op.resource:
                     resource = op.resource
                     
@@ -3566,8 +3907,7 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
                         if hasattr(resource, 'index'):
                             well_offset = resource.index
                         elif hasattr(resource, 'name'):
-                            # Well name like "A1" - convert to offset
-                            from pyfluent.protocol import well_name_to_offset
+                            # Well name like "A1" - convert to offset (already imported at top)
                             well_offset = well_name_to_offset(resource.name)
                         else:
                             well_offset = 0
@@ -3613,9 +3953,9 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         # Get tips - use default diti_type since PyLabRobot resources don't have this info
         # Extract tip_indices from use_channels
         tip_indices = use_channels if use_channels else None
-        self.logger.info(f"Calling direct API: get_tips(diti_type='FCA, 200ul', tip_indices={tip_indices})")
+        self.logger.info(f"Calling direct API: get_tips(diti_type=DEFAULT_DITI_TYPE, tip_indices={tip_indices})")
         self.get_tips(
-            diti_type="TOOLTYPE:LiHa.TecanDiTi/TOOLNAME:FCA, 200ul",  # Default
+            diti_type=DEFAULT_DITI_TYPE,
             tip_indices=tip_indices
         )
 
@@ -3638,9 +3978,9 @@ class FluentVisionX(LiquidHandlerBackend if PYLABROBOT_AVAILABLE else object):
         # Drop tips - use default waste location
         # Extract tip_indices from use_channels
         tip_indices = use_channels if use_channels else None
-        self.logger.info(f"Calling direct API: drop_tips_to_location(labware='MCA Thru Deck Waste Chute', tip_indices={tip_indices})")
+        self.logger.info(f"Calling direct API: drop_tips_to_location(labware=DEFAULT_MCA_WASTE, tip_indices={tip_indices})")
         self.drop_tips_to_location(
-            labware="MCA Thru Deck Waste Chute with Tip Drop Guide_2",  # Default waste
+            labware=DEFAULT_MCA_WASTE,
             tip_indices=tip_indices
         )
 
