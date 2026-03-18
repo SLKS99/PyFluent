@@ -19,8 +19,18 @@
 ### Installation
 
 ```bash
-pip install pythonnet  # Required for .NET API access
+# Core package (worklists, protocol building, converters)
+pip install pyfluent
+
+# Windows-only VisionX backend for direct FluentControl integration
+pip install "pyfluent[visionx]"
 ```
+
+### Platform Support
+
+- **Windows** - Full support, including direct VisionX/FluentControl control
+- **macOS / Linux** - Worklist generation and protocol building only
+- **Direct hardware control** requires Tecan VisionX/FluentControl and the optional `visionx` dependencies
 
 ### Basic Usage
 
@@ -164,10 +174,10 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 
 ##  Requirements
 
-- **Windows** - Required for .NET API access
 - **Python 3.9+**
-- **Tecan VisionX/FluentControl** - Must be installed
-- **pythonnet** - `pip install pythonnet`
+- **Windows** - Required for direct .NET API access
+- **Tecan VisionX/FluentControl** - Must be installed for direct robot control
+- **pythonnet + comtypes** - Installed automatically with `pip install "pyfluent[visionx]"` on Windows
 - **pylabrobot** - `pip install pylabrobot` (for PyLabRobot integration)
 
 ##  Installation
@@ -179,11 +189,17 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 git clone https://github.com/SLKS99/PyFluent.git
 cd PyFluent
 
-# Install in development mode
+# Install core package in development mode
 pip install -e .
 
-# Or install dependencies
-pip install -r requirements.txt
+# Or install with the Windows VisionX backend
+pip install -e ".[visionx]"
+
+# Development dependencies
+pip install -e ".[dev]"
+
+# Windows development environment with the VisionX backend
+pip install -e ".[dev,visionx]"
 ```
 
 ##  Examples
