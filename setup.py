@@ -41,9 +41,12 @@ setup(
     python_requires=">=3.9",
     install_requires=[
         "pylabrobot>=0.1.0",  # Core PyLabRobot dependency
-        "pythonnet>=3.0.0",  # Python.NET for .NET API access
     ],
     extras_require={
+        "visionx": [
+            "pythonnet>=3.0.0; platform_system == 'Windows'",  # Python.NET for .NET API access
+            "comtypes>=1.2.0; platform_system == 'Windows'",  # COM interop for FluentControl events/commands
+        ],
         "dev": [
             "pytest>=7.0.0",
             "pytest-asyncio>=0.21.0",
