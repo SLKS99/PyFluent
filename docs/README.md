@@ -72,8 +72,17 @@ PyFluent provides two ways to control Tecan Fluent:
 
 ### Installation
 
+Install PyFluent from its GitHub repository; the `pyfluent` name on PyPI belongs to an unrelated Fluentd logging library. See the [main README](../README.md#quick-start) for installation verification and platform support.
+
 ```bash
-pip install pythonnet  # Required for .NET API access
+git clone https://github.com/SLKS99/PyFluent.git
+cd PyFluent
+
+# Core package (worklist generation and protocol building)
+python -m pip install -e .
+
+# OR, on Windows, install with the VisionX backend for direct robot control
+python -m pip install -e ".[visionx]"
 ```
 
 ### Basic Example (Direct API)
@@ -438,10 +447,11 @@ See the `examples/` directory for complete examples:
 
 ## Requirements
 
-- **Windows** - Required for .NET API access
-- **Tecan VisionX/FluentControl** - Must be installed
-- **pythonnet** - `pip install pythonnet`
-- **pylabrobot** - `pip install pylabrobot` (for PyLabRobot integration)
+- **Python 3.9+**
+- **Windows** - Required for direct .NET API access only
+- **Tecan VisionX/FluentControl** - Must be installed for direct robot control
+- **pythonnet + comtypes** - Installed automatically on Windows by the `visionx` extra
+- **pylabrobot** - Installed automatically as a core dependency
 
 ## Troubleshooting
 
