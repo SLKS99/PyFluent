@@ -18,13 +18,26 @@
 
 ### Installation
 
-```bash
-# Core package (worklists, protocol building, converters)
-pip install pyfluent
+**Install from this GitHub repository.** The `pyfluent` name on [PyPI](https://pypi.org/project/pyfluent/) belongs to an unrelated Fluentd logging library, not this Tecan Fluent project. Use a fresh Python environment if you previously installed that package.
 
-# Windows-only VisionX backend for direct FluentControl integration
-pip install "pyfluent[visionx]"
+```bash
+git clone https://github.com/SLKS99/PyFluent.git
+cd PyFluent
+
+# Core package (worklists, protocol building, converters)
+python -m pip install -e .
+
+# OR, on Windows, install with the VisionX backend for direct FluentControl integration
+python -m pip install -e ".[visionx]"
 ```
+
+Verify the installation:
+
+```bash
+python -m pip show pyfluent
+```
+
+The package summary should identify Tecan Fluent liquid handling robots, and the editable project location should point to your cloned repository.
 
 ### Platform Support
 
@@ -175,10 +188,10 @@ wl.save("my_protocol.gwl")  # Save as Tecan GWL format
 ##  Requirements
 
 - **Python 3.9+**
-- **Windows** - Required for direct .NET API access
+- **Windows** - Required for direct .NET API access only
 - **Tecan VisionX/FluentControl** - Must be installed for direct robot control
-- **pythonnet + comtypes** - Installed automatically with `pip install "pyfluent[visionx]"` on Windows
-- **pylabrobot** - `pip install pylabrobot` (for PyLabRobot integration)
+- **pythonnet + comtypes** - Installed automatically on Windows by the `visionx` extra (`python -m pip install -e ".[visionx]"` from the repository root)
+- **pylabrobot** - Installed automatically as a core dependency
 
 ##  Installation
 
@@ -190,16 +203,16 @@ git clone https://github.com/SLKS99/PyFluent.git
 cd PyFluent
 
 # Install core package in development mode
-pip install -e .
+python -m pip install -e .
 
 # Or install with the Windows VisionX backend
-pip install -e ".[visionx]"
+python -m pip install -e ".[visionx]"
 
 # Development dependencies
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 
 # Windows development environment with the VisionX backend
-pip install -e ".[dev,visionx]"
+python -m pip install -e ".[dev,visionx]"
 ```
 
 ##  Examples
